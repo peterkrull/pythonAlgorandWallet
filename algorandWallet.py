@@ -336,7 +336,7 @@ class algoWallet:
 
     # sign key registration transaction
     def signKeyreg(self,data_in,private_in):
-        return self.signData(data_in,private_in,"tx")
+        return self.signData(data_in,private_in,"reg")
 
     # quick function for sending algos using node object
     def sendAlgo(self,name,reciever,amount,algoNodeObj):
