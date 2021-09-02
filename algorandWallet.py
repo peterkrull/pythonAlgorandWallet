@@ -409,7 +409,7 @@ class algoWallet:
         return self.signTransaction(raw_data,private)    
 
     # transact algos offline (you must supply all parameters manually)
-    def makeAlgoTxOffline(self,name,reciever,amount, first = "", last = "", fee = 0, microAlgos = False, gen = "", gh = "", net = "mainnet"):
+    def makeAlgoTxOffline(self,name,reciever,amount, first = "", last = "", fee = 0, gen = "", gh = "", net = "mainnet", microAlgos = False):
         rcv_address = reciever
 
         if not algosdk.encoding.is_valid_address(rcv_address):
@@ -574,8 +574,8 @@ def txnMessage(response,node):
 ## ==================================== ##
 
 print("Welcome to the Algorand Wallet written in Python.")
-print("A help() function has not yet been implemented.")
-print("Please see the example code in the algorandWallet.py file.")
+print("For now, a help() function has not been implemented, please")
+print("see the example code at the bottom of the algorandWallet.py file.")
 
 ## ========= ##
 ## DEMO CODE ##
