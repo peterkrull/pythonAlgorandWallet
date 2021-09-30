@@ -30,12 +30,12 @@ class node:
             return "https://betanet.algoexplorer.io/"
 
     # Returns true if the API is healthy    
-    def getHealth(self):
+    def health(self):
         temp_url = self.base_url + str("health")
         return self.req.get(temp_url).ok
 
     # Gets parameters for new transactions
-    def suggestedParams(self):
+    def suggested_params(self):
         temp_url = self.base_url + str("v2/transactions/params")
         response = self.req.get(temp_url)
         
@@ -56,7 +56,7 @@ class node:
             raise Exception("Can't connect to API. URL might be incorrect.")
 
     # Gets the info related to a public address
-    def getAccountInfo(self,public_addr):
+    def account_info(self,public_addr):
         temp_url = self.base_url + str("v2/accounts/" + str(public_addr))
         response = self.req.get(temp_url)
         if response.ok:
@@ -66,7 +66,7 @@ class node:
             raise Exception("API call failed :{}".format(response.content))
     
     # make post transaction to the blockchain using API
-    def sendTransaction(self,signed_txn):
+    def send_transaction(self,signed_txn):
         import base64
         # Turn a Algorand MSGpack into a binary that is compatible with the API
         signed_txn = base64.b64decode(algosdk.encoding.msgpack_encode(signed_txn))
