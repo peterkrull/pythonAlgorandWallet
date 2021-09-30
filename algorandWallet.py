@@ -25,7 +25,7 @@ class algoWallet:
             self.importWallet(filename)
         except FileNotFoundError:
             self.exportWallet(filename)
-        self.generate = generate()
+        #self.generate = generate() not used for now
 
     ## ========================== ##
     ## BASIC WALLET FUNCTIONALITY ##
@@ -641,7 +641,7 @@ class generate():
     def governanceVoteRaw(vote:str) -> str:
         return f"af/gov1:j[{vote}]"
 
-    def governanceVoteNote(vote_round:int,cast_votes:list[str]) -> str:
+    def governanceVoteNote(vote_round:int,cast_votes:str) -> str:
         xvotes = ""
         if type(cast_votes) == list:
             for i in range(len(cast_votes)):
@@ -650,7 +650,7 @@ class generate():
                     xvotes += ","
         else:
             xvotes = cast_votes
-        return f"af/gov1:j[{vote_round}:{xvotes}]"
+        return f"af/gov1:j[{vote_round},{xvotes}]"
 
 # Request password from user
 def password(name = None):
