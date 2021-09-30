@@ -1,5 +1,4 @@
 import algosdk
-from algosdk.v2client.algod import AlgodClient
 
 import cryptography
 from cryptography.fernet import Fernet
@@ -12,6 +11,15 @@ class algoWallet:
 
     # class constructor
     def __init__(self,filename = "algoWallet"):
+        """
+        Algorand Wallet class for handling of multiple wallets as well as encryption and decryption of private keys.
+        Also contains functionality to send simple transactions and go online/offline for consensus.
+
+        Args:
+            filename (str) : Name of file that will be saved to and loaded from.
+        
+        Returns : wallet object
+        """
         self.walletFileName = filename
         self.internalWallet = {}
         try:
@@ -26,32 +34,65 @@ class algoWallet:
 
     # sets the disired name of the wallet file
     def setWalletFileName(self,fileName):
+        """
+        Changes the default wallet file
+
+        Args:
+            fileName (str) : name of file to use for importing and exporting
+        """
         self.walletFileName = fileName
 
     # import wallet from wallet file
-    def importWallet(self,fileName = ""):
+    def importWallet(self,fileName = None):
+        """
+        Imports wallet from file to internal wallet
+
+        Args:
+            fileName (str) : File to import, leave blank for default
+        """
+
         import json
-        if fileName == "":
+        if not fileName:
             fileName = self.walletFileName
         self.internalWallet = json.load(open(fileName,'r'))
 
     # export wallet to a file
-    def exportWallet(self,fileName = ""):
+    def exportWallet(self,fileName = None):
+        """
+        Exports internal wallet to file with certain file name
+
+        Args:
+            fileName (str) : File to save to, leave blank for default
+        """
         import json
-        if fileName == "":
+        if not fileName:
             fileName = self.walletFileName
         with open(fileName,'w') as file:
             json.dump(self.internalWallet,file,indent=4)
 
     # generates a new wallet
-    def genAccount(self,name,password = False): 
+    def genAccount(self,name:str,password:str = None): 
+        """
+        Generates random account and adds it to internal wallet
+
+        Args:
+            name (str) : Name for the account, as it will appear in wallet
+            password (str) : Password to use for encryption, leave blank for no encryption
+        """
 
         private, public = algosdk.account.generate_account()
         self.makeAccount(name,private,password)
 
     # accept either mnemonic or private key as input to recover account
-    def importAccount(self,name,private, password = False):
+    def importAccount(self,name:str,private:str, password:str = None):
+        """
+        Import an account from an existing private key or mnemonic
 
+        Args:
+            name (str) : Name for the account, as it will appear in wallet
+            private (str) : Private key OR mnemonic of account to add
+            password (str) : Password to use for encryption, leave blank for no encryption
+        """
         # check if given key is valid private key or mnemonic
         try:
             algosdk.account.address_from_private_key(private)
@@ -66,7 +107,15 @@ class algoWallet:
         self.makeAccount(name,private,password)
 
     # make an account from private key (not for users)
-    def makeAccount(self,name,private,password = False):
+    def makeAccount(self,name:str,private:str,password:str = None):
+        """
+        Generates account dictionary and appends it to the wallet file, encrypts if needed
+
+        Args:
+            name (str) : Name for the account, as it will appear in wallet
+            private (str) : Private key (not mnemonic) of account to add
+            password (str) : Password to use for encryption, leave blank for no encryption
+        """
         # derive pubilc and mnemonic from private key
         public = algosdk.account.address_from_private_key(private)
         mnemonic = algosdk.mnemonic.from_private_key(private)
@@ -102,10 +151,16 @@ class algoWallet:
 
     # TODO (func) renames an existing account.
     def renameAccount(self,oldName,newName,password = False):
+        """
+        "Functionality not yet implemented"
+        """
         print("Functionality not yet implemented")
     
     # TODO (func) delete an existing account.
     def removeAccount(self,name):
+        """
+        "Functionality not yet implemented"
+        """
         print("Functionality not yet implemented")
 
     ## ================ ##
@@ -113,12 +168,24 @@ class algoWallet:
     ## ================ ##
 
     # gets the public address for an account in wallet
-    def getPublic(self,account):
+    def getPublic(self,account:str,pw:str = None):
+        """
+        Gets encrypted or unencrypted public key from some account in wallet file
+
+        Args:
+            account (str) : Name of account to retrieve public key from
+            pw (str) : Password for encrypted account (if needed)
+
+        Returns: Public key (str)
+        """
         try:
-            if self.getSalt(account) != "":
+            if self.getSalt(account) == "":
                 return self.internalWallet[account]["account"]["public"]
             else:
-                return self.decryptPublic(account,password(account))
+                if pw:
+                    return self.decryptPublic(account,pw)
+                else:
+                    return self.decryptPublic(account,password(account))
         except KeyError:
 
             # also try contact
@@ -128,22 +195,47 @@ class algoWallet:
                 print("No account or contact named '" + account + "' exists.")
 
     # gets the private key for an account in wallet
-    def getPrivate(self,account):
+    def getPrivate(self,account:str,pw:str = None):
+        """
+        Gets encrypted or unencrypted private key from some account in wallet file
+
+        Args:
+            account (str) : Name of account to retrieve private key from
+            pw (str) : Password for encrypted account (if needed)
+
+        Returns: Private key (str)
+        """
         try:
-            if self.getSalt(account) != "":
+            if self.getSalt(account) == "":
                 return self.internalWallet[account]["account"]["private"]
             else:
-                return self.decryptPrivate(account,password(account))
+                if pw:
+                    return self.decryptPrivate(account,pw)
+                else:
+                    return self.decryptPrivate(account,password(account))
         except KeyError:
             print("No account named '" + account + "' exists.")
 
     # gets the private mnemonic for an account in wallet
-    def getMnemonic(self,account):
+    def getMnemonic(self,account:str,pw:str = None):
+        """
+        Gets encrypted or unencrypted mnemonic from some account in wallet file
+
+        Args:
+            account (str) : Name of account to retrieve mnemonic from
+            pw (str) : Password for encrypted account (if needed)
+    
+        Returns: Private mnemonic (str)
+        """
+
         try:
-            if self.getSalt(account) != "":
+            if self.getSalt(account) == "":
                 return self.internalWallet[account]["account"]["mnemonic"]
             else:
-                return self.decryptMnemonic(account,password(account))
+                if pw:
+                    return self.decryptMnemonic(account,pw)
+                else:
+                    return self.decryptMnemonic(account,password(account))
         except KeyError:
             print("No account named '" + account + "' exists.")
 
@@ -152,17 +244,37 @@ class algoWallet:
     ## ====================== ##
 
     # add a contact to address book for certain account
-    def addContact(self,contact,publicAddr):
+    def addContact(self,contact:str,publicAddr:str):
+        """
+        Add a contact with a certain name to the wallet
+
+        Args:
+            contact (str) : Name of contact as it will appear in wallet file
+            publicAddr (str) : Public address of contact
+        """
         if  algosdk.encoding.is_valid_address(publicAddr):
             try:
                 self.internalWallet[contact]["contact"].update({contact:publicAddr})
             except KeyError:
+                try:
+                    self.internalWallet[contact]["account"]
+                    print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
+                    if (input().lower() != "yes"):
+                        return
+                except:
+                    pass    
                 self.internalWallet.update({contact:{"contact" : {"public":publicAddr}}})
         else:
             raise Exception("Invalid Algorand account address.")
 
     # removes contact from certain accounts addressbook
-    def removeContact(self,contact):
+    def removeContact(self,contact:str):
+        """
+        Remove contact from wallet
+
+        Args:
+            contact (str) : Contact to remove
+        """
         try:
             del self.internalWallet[contact]
         except KeyError:
@@ -173,15 +285,26 @@ class algoWallet:
     ## ============================== ##
 
     # returns the salt value for any account or contact
-    def getSalt(self,name):
-        try:
-            return self.internalWallet[name]["fernetsalt"]
-        except KeyError:
-            print("No account named '" + name + "' exists.")
-            raise KeyError
+    def getSalt(self,name:str):
+        """
+        Returns the salt of some account
+
+        Args: name (str) : Name of account to retrieve salt from
+        Returns : salt (str)
+        """
+        return self.internalWallet[name]["fernetsalt"]
    
     # generate fernet key with given salt and password
-    def fernetGenerator(self,salt,password):
+    def fernetGenerator(self,salt:bytes,password:str):
+        """
+        Generates Fernet key from some salt and password
+
+        Args:
+            salt (str) or (bytes) : Salt to use for encryption
+            password (str) : Password to use for enctyption
+
+        Returns: Fernet key used for encryption and decryption
+        """
         wallet_password_byte = password.encode()
         import base64
 
@@ -200,7 +323,18 @@ class algoWallet:
         return Fernet(base64.urlsafe_b64encode(kdf.derive(wallet_password_byte)))
 
     # encrypts the contents using a specific password
-    def encryptContents(self,contents,password):
+    def encryptContents(self,contents:str,password:str):
+
+        """
+        Encrypts any content
+
+        Args:
+            contents (str) or list(str) : Content to encrypt
+            password (str) : Password to use for encryption
+
+        Returns: Encrypted contents (str) or list(str)
+        """
+
         # Encryption of private information
         # creates Fernet compatible password key
         import os
@@ -218,7 +352,14 @@ class algoWallet:
             return fern.encrypt(bytes(contents, 'utf-8')).decode() , base64.b64encode(salt).decode()
     
     # encrypt the contents of an account
-    def encryptAccount(self,name,password):
+    def encryptAccount(self,name:str,password:str):
+        """
+        Encrypts all the contents of an account and saves it to the internalWallet object
+
+        Args:
+            name (str) : Name of account to decrypt
+            password (str) : Password for encrypted account
+        """
 
         # check if account does not exist or is encrypted
         try:
@@ -233,12 +374,18 @@ class algoWallet:
         except KeyError:
             private = algosdk.mnemonic.to_private_key(self.internalWallet[name]["account"]["mnemonic"])
 
-
-
         self.makeAccount(name,private,password)
 
     # decrypt the contents of an account
-    def decryptAccount(self,name,password):
+    def decryptAccount(self,name:str,password:str):
+
+        """
+        Decrypts all the contents of an account and saves it to the internalWallet object
+
+        Args:
+            name (str) : Name of account to decrypt
+            password (str) : Password for encrypted account
+        """
 
         # check if account is even encrypted
         try:
@@ -257,7 +404,16 @@ class algoWallet:
         return fern.decrypt(bytes(contents, 'utf-8')).decode()
 
     # decrypt and get the public address of account or contact
-    def decryptPublic(self,name,password):
+    def decryptPublic(self,name:str,password:str):
+        """
+        Decrypts the public key of an account in the Wallet
+
+        Args:
+            name (str) : Name of account to decrypt
+            password (str) : Password for encrypted account
+
+        Returns: Decrypted public key
+        """
         fern = self.fernetGenerator(self.getSalt(name),password)
         # first, try to look for matching account
         try:
@@ -280,7 +436,17 @@ class algoWallet:
         return public
 
     # decrypt and get the private key of an account
-    def decryptPrivate(self,name,password):
+    def decryptPrivate(self,name:str,password:str):
+        """
+        Decrypts the private key of an account in the Wallet
+
+        Args:
+            name (str) : Name of account to decrypt
+            password (str) : Password for encrypted account
+
+        Returns: Decrypted private key
+        """
+
         fern = self.fernetGenerator(self.getSalt(name),password)
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["private"], 'utf-8')).decode()
@@ -288,7 +454,16 @@ class algoWallet:
             raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
         
     # decrypt and get the private mnemonic of an account
-    def decryptMnemonic(self,name,password):
+    def decryptMnemonic(self,name:str,password:str):
+        """
+        Decrypts the Mnemonic of an account in the Wallet
+
+        Args:
+            name (str) : Name of account to decrypt
+            password (str) : Password for encrypted account
+
+        Returns: Decrypted private mnemonic
+        """
         fern = self.fernetGenerator(self.getSalt(name),password)
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["mnemonic"], 'utf-8')).decode()
@@ -302,7 +477,21 @@ class algoWallet:
     # TODO algosdk.encoding.transaction.xxxxxx is outdated and it should be using algosdk.future.transaction.xxxxxx instead
 
     # transact algos offline (you must supply all parameters manually)
-    def makeSendAlgoTx(self,name,reciever,amount, params, password = None, microAlgos = False):
+    def makeSendAlgoTx(self,name:str,reciever,amount, params, password = None, microAlgos = False):
+
+        """
+        Simple function for creating a signed Algo transaction
+
+        Args:
+            name (str) : Account used to send Algos from
+            reciever : Address or name in wallet file of recipient
+            amount : Number of algos to send to recipient
+            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            password (str) : If needed, password used to decrypt wallet.
+            microAlgos (bool) : Switch to micro Algos instead of full algos (muiltiply by 1_000_000)
+
+        Returns: signed transaction
+        """
         
         # try to convert to dictionary
         try:
@@ -311,8 +500,8 @@ class algoWallet:
             pass
 
         rcv_address = reciever
-        public = self.getPrivate(name)
-        private = self.getPrivate(name)
+        public = self.getPublic(name,password)
+        private = self.getPrivate(name,password)
 
         # check if wallet wallet is encrypted and password is provided
         try:
@@ -346,80 +535,30 @@ class algoWallet:
         raw_data = {
             "amt": int(amount),         # unit is microAlgos
             "fee": int(params["fee"]),                 # data["fee"] ~ 0.001 Algos
-            "first": int(params["first"]),        # first valid block
-            "last": int(params["last"]),  # last valid block
-            "gen": params["gen"],          # network
+            "first": int(params["lastRound"]),        # first valid block
+            "last": int(params["lastRound"]+1000),  # last valid block
+            "gen": params["genesisID"],          # network
             "receiver": rcv_address,            # reciever address
             "sender": public,     # sender address
-            "gh": params["gh"]          # genisis hash
+            "gh": params["genesishashb64"]          # genisis hash
         }
 
-        return self.signData(raw_data,private,"tx")
-
-    # sign any kind of data dictionary by defining a type
-    def signData(self,data_in,private_in,type = "transaction"):
-
-        # Format raw data as a payment transaction
-        if any(x in type.lower() for x in ['transaction','transact','txn','tx','send',"snd","pay","payment"]):
-            try:
-                unsigned_data = algosdk.encoding.transaction.PaymentTxn(**data_in,)
-            except TypeError as e:
-                print("Invalid PaymentTxn data : " + str(e))
-                return
-        
-        # format raw data as a key registration to go online/offline for governance
-        elif any(x in type.lower() for x in ['keyreg','register','reg','participate','consensus',"gov","governance"]):
-            try:
-                unsigned_data = algosdk.encoding.transaction.KeyregTxn(**data_in,)
-            except TypeError as e:
-                print("Invalid KeyregTxn data : " + str(e))
-                return
-        
-        # format raw data as a asset transfer transaction
-        elif any(x in type.lower() for x in ['assettransfer','transferasset']):
-            try:
-                unsigned_data = algosdk.encoding.transaction.AssetTransferTxn(**data_in,)
-            except TypeError as e:
-                print("Invalid AssetTransferTxn data : " + str(e))
-                return
-
-        # format raw data as a asset config transaction
-        elif any(x in type.lower() for x in ['assetconfig','configasset']):
-            try:
-                unsigned_data = algosdk.encoding.transaction.AssetConfigTxn(**data_in,)
-            except TypeError as e:
-                print("Invalid AssetConfigTxn data : " + str(e))
-                return
-
-        # format raw data as a asset freeze transaction
-        elif any(x in type.lower() for x in ['assetfreeze','freezeasset']):
-            try:
-                unsigned_data = algosdk.encoding.transaction.AssetFreezeTxn(**data_in,)
-            except TypeError as e:
-                print("Invalid AssetFreezeTxn data : " + str(e))
-                return
-
-
-        # accept either mnemonic or private key as input
-        private = ""
-        try:
-            algosdk.account.address_from_private_key(private_in)
-            private = private_in
-        except:
-            pass
-            try:
-                private = algosdk.mnemonic.to_private_key(private_in)
-            except ValueError:
-                raise ValueError("***Invalid private key/phrase. Please double check that it is correct.***")
-
-        # Sign transaction using private key
-        signed_data = unsigned_data.sign(private)
-
-        return signed_data
+        tx = algosdk.encoding.transaction.PaymentTxn(**raw_data,)
+        return tx.sign(private)
 
     # generate the string needed to generate participation keys
-    def addPartKey(self,name,params,rounds,password = None):
+    def addPartKey(self,name:str,params,rounds:int,password:str = None):
+        """
+        Prints the line that is needed for generating participation keys on an Algorand node
 
+        Args:
+            name (str) : Name of account in wallet file to generate participation key for
+            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            rounds (int) : Number of rounds for participation key to be valid
+            password (str) : If needed, password used to decrypt wallet.
+
+        Returns: prints to command line
+        """
          # try to convert to dictionary
         try:
             params = vars(params)
@@ -433,16 +572,30 @@ class algoWallet:
         # either go online or offline to be a good faith consensus participant
         if password:
             print("===========")
-            print("goal account addpartkey -a {a} --roundFirstValid={f} --roundLastValid={l} -d /var/lib/algorand".format(a=self.decryptPublic(name,password),f=params["first"],l=params["first"]+rounds))
+            print("goal account addpartkey -a {a} --roundFirstValid={f} --roundLastValid={l} -d /var/lib/algorand".format(a=self.decryptPublic(name,password),f=params["lastRound"],l=params["lastRound"]+rounds))
             print("===========")
         else:
             print("===========")
-            print("goal account addpartkey -a {a} --roundFirstValid={f} --roundLastValid={l} -d /var/lib/algorand".format(a=self.getPublic(name),f=params["first"],l=params["first"]+rounds))
+            print("goal account addpartkey -a {a} --roundFirstValid={f} --roundLastValid={l} -d /var/lib/algorand".format(a=self.getPublic(name),f=params["lastRound"],l=params["lastRound"]+rounds))
             print("===========")
 
     # generate transaction data that commits an account to be online or offline for consensus
-    def participateConsensus(self,name,params,partkeyinfo,password = None,status = "Online"):
+    def participateConsensus(self,name:str,params,partkeyinfo:dict = None,password:str = None):
+        """
+        Allows for changing participation status on Algorand, also known as "going online" or "going offline"
+
+        Args:
+            name (str) : Name of account in wallet file to change participation status of
+            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            partkeyinfo (dict) : Participation info gotten from personal node using 'goal account partkeyinfo'
+            password (str) : If needed, password used to decrypt wallet.
+
+        Returns: signed transaction with signature
+        """
         import base64
+
+        #if online and not partkeyinfo:
+        #    raise ValueError("Participation key info has to be provided to register as online.")
 
          # try to convert to dictionary
         try:
@@ -450,25 +603,36 @@ class algoWallet:
         except:
             pass
 
-        status = status.lower()
+        if partkeyinfo:
+            data = {
+                "sender": self.getPublic(name,password),
+                "votekey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])),
+                "selkey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])),
+                "votefst": partkeyinfo["first"],
+                "votelst": partkeyinfo["last"],
+                "votekd": partkeyinfo["voteKD"],
+            }
+        else:
+            data = {
+                "sender": self.getPublic(name,password),
+                "votekey": None,
+                "selkey": None,
+                "votefst": None,
+                "votelst": None,
+                "votekd": None,
+            }
 
-        # Data for going offline
-        data = {
-            "sender": partkeyinfo["acct"],
-            "votekey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])) if status == "online" else None,
-            "selkey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])) if status == "online" else None,
-            "votefst": partkeyinfo["first"] if status == "online" else None,
-            "votelst": partkeyinfo["last"] if status == "online" else None,
-            "votekd": partkeyinfo["voteKD"] if status == "online" else None,
-            "fee": 1500,
-            "flat_fee": True,
-            "first": params["first"],
-            "last": params["last"],
-            "gen": params["gen"],
-            "gh": params["gh"]
-        }
+        data.update(
+                {"fee": 1000,
+                "flat_fee": True,
+                "first": params["lastRound"],
+                "last": params["lastRound"]+1000,
+                "gen": params["genesisID"],
+                "gh": params["genesishashb64"]}
+        )
 
-        return self.signData(data,self.decryptPrivate(name,password),type = "reg")
+        tx = algosdk.encoding.transaction.KeyregTxn(**data,)
+        return tx.sign(self.getPrivate(name,password))
 
 class generate():
 
@@ -491,31 +655,29 @@ class generate():
 
 # Request password from user
 def password(name = None):
+    """
+    Requests a password from the user.
+
+    Args:
+        name (str) : Name of account password belongs to
+
+    Returns: password entered by user.
+    """
     import getpass
-    if name != None:
+    if name:
         print("Please provide the password for decrypting '{}'.".format(name))
     else:
         print("Please provide the password for decrypting the account.")
     return getpass.getpass()
 
-# Prints transaction response
-def txnMessage(response,node):
-    if response:
-        if response.status_code == 200:
-            import ast
-            print("Transaction successful, transaction overview URL can be found below:")
-            print(node.explorer()+ "tx/" + ast.literal_eval(bytes.decode(response.content))["txId"])
-        else:
-            print("Got status code : {}".format(str(response.status_code)))
-            print(bytes.decode(response.content))
-
 ## ==================================== ##
 ## PUT CODE TO RUN AT SCRIPT START HERE ##
 ## ==================================== ##
 
-print("Welcome to the Algorand Wallet written in Python.")
-print("For now, a help() function has not been implemented, please")
-print("see the example code at the bottom of the algorandWallet.py file.")
+if __name__ == '__main__':
+    print("Welcome to the Algorand Wallet written in Python.")
+    print("For now, a help() function has not been implemented, please")
+    print("see the example code at the bottom of the algorandWallet.py file.")
 
 ## ========= ##
 ## DEMO CODE ##
@@ -526,14 +688,14 @@ print("see the example code at the bottom of the algorandWallet.py file.")
 #
 ## Creates a connection to the AlgoExplorer API
 #import AlgoExplorerAPI as ae
-#node = ae.algoNode("mainnet")
+#node = ae.node("mainnet")
 #
 ## OR!
 #
 ## Transact using a personal node
 #address = "http://192.168.1.10:8080"
 #token = "b742378b134679a314879c5674d67930125678b146570e189670cbe"
-#node = AlgodClient(token,address) 
+#node = algosdk.algod.AlgodClient(token,address) 
 #
 ## Fetch suggested parameters from either API or node
 #params = node.suggested_params()
@@ -555,3 +717,12 @@ print("see the example code at the bottom of the algorandWallet.py file.")
 #
 ## Registers as online for participation in consensus
 #txB = wallet.participateConsensus("primary_account",params,partkeyinfo,"myPassword1234!","online")
+#
+## Sends transaction and catches transaction ID
+#txnoteA = node.send_transaction(txA) # Posts money transfer transaction to blockchain
+#txnoteB = node.send_transaction(txB) # Posts consensus participation transaction to blockchain
+#
+## Prints links to AlgoExplorer transaction page 
+## !!This will only work for the AlgoExplorerAPI node!!
+#print( node.explorer_tx(txA) ) 
+#print( node.explorer_tx(txB) )
