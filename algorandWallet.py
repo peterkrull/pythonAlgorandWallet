@@ -453,7 +453,7 @@ class algoWallet:
             "votekey": None if status == "Online" else algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])),
             "selkey": None if status == "Online" else algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])),
             "votefst": None if status == "Online" else partkeyinfo["first"],
-            "votelst": None if status == "Online" else partkeyinfo["first"],
+            "votelst": None if status == "Online" else partkeyinfo["last"],
             "votekd": None if status == "Online" else partkeyinfo["voteKD"],
             "fee": 1500,
             "flat_fee": True,
