@@ -16,6 +16,7 @@ class algoWallet:
         self.internalWallet = {}
         if importInit:
             self.importWallet(filename)
+        self.generate = generate()
 
     ## ========================== ##
     ## BASIC WALLET FUNCTIONALITY ##
@@ -454,7 +455,7 @@ class algoWallet:
             "sender": partkeyinfo["acct"],
             "votekey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])) if status == "online" else None,
             "selkey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])) if status == "online" else None,
-            "votefst": partkeyinfo["first"] if status == "online" else None
+            "votefst": partkeyinfo["first"] if status == "online" else None,
             "votelst": partkeyinfo["last"] if status == "online" else None,
             "votekd": partkeyinfo["voteKD"] if status == "online" else None,
             "fee": 1500,
@@ -467,6 +468,24 @@ class algoWallet:
 
         return self.signData(data,self.decryptPrivate(name,password),type = "reg")
 
+class generate():
+
+    def governanceCommitNote(commit_amount:int) -> str:
+        return "af/gov1:j{\"com\":" + str(commit_amount) + "}"
+
+    def governanceVoteRaw(vote:str) -> str:
+        return f"af/gov1:j[{vote}]"
+
+    def governanceVoteNote(vote_round:int,cast_votes:list[str]) -> str:
+        xvotes = ""
+        if type(cast_votes) == list:
+            for i in range(len(cast_votes)):
+                xvotes +="\"" + str(cast_votes[i]) + "\""
+                if i + 1 < len(cast_votes):
+                    xvotes += ","
+        else:
+            xvotes = cast_votes
+        return f"af/gov1:j[{vote_round}:{xvotes}]"
 
 # Request password from user
 def password(name = None):
