@@ -28,13 +28,16 @@ class node(algosdk.algod.AlgodClient):
         self.headers = {"User-Agent": "API-request"}
     
     # returns relevant explorer URL
-    def legacy_explorer(self):
+    def explorer(self):
         if self.net == "mainnet":
             return "https://algoexplorer.io/"
         elif self.net == "testnet":
             return "https://testnet.algoexplorer.io/"
         elif self.net == "betanet":
             return "https://betanet.algoexplorer.io/"
+
+    def explorer_tx(self,tx):
+        return self.explorer()+"tx/"+str(tx)
 
     # Returns true if the API is healthy    
     def legacy_health(self):
