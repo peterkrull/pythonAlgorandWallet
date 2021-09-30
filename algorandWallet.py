@@ -636,12 +636,41 @@ class algoWallet:
 class generate():
 
     def governanceCommitNote(commit_amount:int) -> str:
+        """
+        Generates a properly formatted string commiting algos for Algorand Governance proposals.
+
+        Args:
+            commit_amount (int) : Amount of micro Algos to commit for governance
+
+        Returns: Formatted string
+        """
         return "af/gov1:j{\"com\":" + str(commit_amount) + "}"
 
     def governanceVoteRaw(vote:str) -> str:
+        """
+        Generates a properly formatted string for voting on Algorand Governance proposals.
+        This should be added to the note field of a transaction to a specific governance address.
+        See also `governanceVoteNote()`
+
+        Args:
+            vote (int) : Round to vote in as well as votes to cast in governance proposal
+
+        Returns: Formatted string
+        """
         return f"af/gov1:j[{vote}]"
 
     def governanceVoteNote(vote_round:int,cast_votes:str) -> str:
+        """
+        Generates a properly formatted string for voting on Algorand Governance proposals.
+        This should be added to the note field of a transaction to a specific governance address.
+        Votes should be entered like this:  `governanceVoteNote(23,["b","c"])`
+
+        Args:
+            vote_round (int) : Round to vote in
+            cast_votes (str) or list(str) : Votes to cast in governance proposal
+
+        Returns: Formatted string
+        """
         xvotes = ""
         if type(cast_votes) == list:
             for i in range(len(cast_votes)):
