@@ -1,7 +1,6 @@
 import algosdk
 
-import cryptography
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -419,7 +418,7 @@ class algoWallet:
         try:
             try:
                 public = fern.decrypt(bytes(self.internalWallet[name]["account"]["public"], 'utf-8')).decode()
-            except cryptography.fernet.InvalidToken:
+            except InvalidToken:
                 raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
         except KeyError:
 
@@ -427,7 +426,7 @@ class algoWallet:
             try:
                 try:
                     public = fern.decrypt(bytes(self.internalWallet[name]["contact"]["public"], 'utf-8')).decode()
-                except cryptography.fernet.InvalidToken:
+                except InvalidToken:
                     print("Invalid password for '{}', decryption failed.".format(name))
             except KeyError:
                 raise KeyError("This account or contact does not exist.")
@@ -450,7 +449,7 @@ class algoWallet:
         fern = self.fernetGenerator(self.getSalt(name),password)
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["private"], 'utf-8')).decode()
-        except cryptography.fernet.InvalidToken:
+        except InvalidToken:
             raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
         
     # decrypt and get the private mnemonic of an account
@@ -467,7 +466,7 @@ class algoWallet:
         fern = self.fernetGenerator(self.getSalt(name),password)
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["mnemonic"], 'utf-8')).decode()
-        except cryptography.fernet.InvalidToken:
+        except InvalidToken:
             raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
     
     ## ============================= ##
