@@ -39,7 +39,7 @@ class algoWallet:
         if fileName == "":
             fileName = self.walletFileName
         with open(fileName,'w') as file:
-            json.dump(self.internalWallet,file)
+            json.dump(self.internalWallet,file,indent=4)
 
     # generates a new wallet
     def genAccount(self,name,password = False): 
