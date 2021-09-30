@@ -11,11 +11,13 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class algoWallet:
 
     # class constructor
-    def __init__(self,filename = "algoWallet",importInit = False):
+    def __init__(self,filename = "algoWallet"):
         self.walletFileName = filename
         self.internalWallet = {}
-        if importInit:
+        try:
             self.importWallet(filename)
+        except FileNotFoundError:
+            self.exportWallet(filename)
         self.generate = generate()
 
     ## ========================== ##
