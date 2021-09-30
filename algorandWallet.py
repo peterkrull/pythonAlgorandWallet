@@ -447,14 +447,16 @@ class algoWallet:
         except:
             pass
 
+        status = status.lower()
+
         # Data for going offline
         data = {
             "sender": partkeyinfo["acct"],
-            "votekey": None if status == "Online" else algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])),
-            "selkey": None if status == "Online" else algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])),
-            "votefst": None if status == "Online" else partkeyinfo["first"],
-            "votelst": None if status == "Online" else partkeyinfo["last"],
-            "votekd": None if status == "Online" else partkeyinfo["voteKD"],
+            "votekey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])) if status == "online" else None,
+            "selkey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])) if status == "online" else None,
+            "votefst": partkeyinfo["first"] if status == "online" else None
+            "votelst": partkeyinfo["last"] if status == "online" else None,
+            "votekd": partkeyinfo["voteKD"] if status == "online" else None,
             "fee": 1500,
             "flat_fee": True,
             "first": params["first"],
@@ -498,7 +500,7 @@ print("see the example code at the bottom of the algorandWallet.py file.")
 ## ========= ##
 
 ## Creates wallet object
-#wallet = algoWallet("algorandWallet",True)
+#wallet = algoWallet("algorandWallet")
 #
 ## Creates a connection to the AlgoExplorer API
 #import AlgoExplorerAPI as ae
