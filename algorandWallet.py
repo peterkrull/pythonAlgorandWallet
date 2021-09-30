@@ -491,11 +491,12 @@ class generate():
 
 # Request password from user
 def password(name = None):
+    import getpass
     if name != None:
         print("Please provide the password for decrypting '{}'.".format(name))
     else:
         print("Please provide the password for decrypting the account.")
-    return input()
+    return getpass.getpass()
 
 # Prints transaction response
 def txnMessage(response,node):
