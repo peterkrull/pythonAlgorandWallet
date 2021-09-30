@@ -644,7 +644,7 @@ class generate():
 
         Returns: Formatted string
         """
-        return "af/gov1:j{\"com\":" + str(commit_amount) + "}"
+        return "af/gov1:j{\"com\":" + str(int(commit_amount)) + "}"
 
     def governanceVoteRaw(vote:str) -> str:
         """
