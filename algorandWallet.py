@@ -716,7 +716,7 @@ if __name__ == '__main__':
 #partkeyinfo = {}
 #
 ## Registers as online for participation in consensus
-#txB = wallet.participateConsensus("primary_account",params,partkeyinfo,"myPassword1234!","online")
+#txB = wallet.participateConsensus("primary_account",params,partkeyinfo,"myPassword1234!")
 #
 ## Sends transaction and catches transaction ID
 #txnoteA = node.send_transaction(txA) # Posts money transfer transaction to blockchain
