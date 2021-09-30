@@ -36,7 +36,9 @@ class node(algosdk.algod.AlgodClient):
         elif self.net == "betanet":
             return "https://betanet.algoexplorer.io/"
 
+    # returns algoexplorer link to transaction
     def explorer_tx(self,tx):
+        
         return self.explorer()+"tx/"+str(tx)
 
     # Returns true if the API is healthy    
