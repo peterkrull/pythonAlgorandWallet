@@ -474,8 +474,6 @@ class algoWallet:
     ## TRANSACTION / SIGNATURE STUFF ##
     ## ============================= ##
 
-    # TODO algosdk.encoding.transaction.xxxxxx is outdated and it should be using algosdk.future.transaction.xxxxxx instead
-
     # generate a signed Algorand transaction object
     def makeSendAlgoTx(self,name:str,reciever:str,amount:int, params:algosdk.future.transaction.SuggestedParams, note:str = None, password:str = None, microAlgos:bool = False):
         """
@@ -559,6 +557,7 @@ class algoWallet:
     def participateConsensus(self,name:str,params,partkeyinfo:dict = None,password:str = None):
         """
         Allows for changing participation status on Algorand, also known as "going online" or "going offline"
+        Wether the account goes online or offline depends on if the partkeyinfo parameter is supplied, or is left at None
 
         Args:
             name (str) : Name of account in wallet file to change participation status of
@@ -689,6 +688,7 @@ class algoWallet:
 
 class generate():
 
+    # generate string that commits Algos for governance
     def governanceCommitNote(commit_amount:int) -> str:
         """
         Generates a properly formatted string commiting algos for Algorand Governance proposals.
@@ -700,19 +700,7 @@ class generate():
         """
         return "af/gov1:j{\"com\":" + str(int(commit_amount)) + "}"
 
-    def governanceVoteRaw(vote:str) -> str:
-        """
-        Generates a properly formatted string for voting on Algorand Governance proposals.
-        This should be added to the note field of a transaction to a specific governance address.
-        See also `governanceVoteNote()`
-
-        Args:
-            vote (int) : Round to vote in as well as votes to cast in governance proposal
-
-        Returns: Formatted string
-        """
-        return f"af/gov1:j[{vote}]"
-
+    # generate string that casts votes in governance (primary method)
     def governanceVoteNote(vote_round:int,cast_votes:str) -> str:
         """
         Generates a properly formatted string for voting on Algorand Governance proposals.
@@ -734,6 +722,20 @@ class generate():
         else:
             xvotes = cast_votes
         return f"af/gov1:j[{vote_round},{xvotes}]"
+
+    # generate string that casts votes in governance (secondary method)
+    def governanceVoteRaw(vote:str) -> str:
+        """
+        Generates a properly formatted string for voting on Algorand Governance proposals.
+        This should be added to the note field of a transaction to a specific governance address.
+        See also `governanceVoteNote()`
+
+        Args:
+            vote (int) : Round to vote in as well as votes to cast in governance proposal
+
+        Returns: Formatted string
+        """
+        return f"af/gov1:j[{vote}]"
 
 class NoValidContact(Exception):
     """

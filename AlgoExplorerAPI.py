@@ -1,5 +1,4 @@
 import algosdk
-from algosdk.algod import AlgodClient
 
 # AlgoExplorer API compatability class
 class node(algosdk.algod.AlgodClient):
@@ -37,8 +36,15 @@ class node(algosdk.algod.AlgodClient):
             return "https://betanet.algoexplorer.io/"
 
     # returns algoexplorer link to transaction
-    def explorer_tx(self,tx):
+    def explorer_tx(self,tx:str) -> str:
+        """
+        Formats an AlgoExplorer URL with the supplied transaction ID
         
+        Args:
+            tx (str) : Transaction ID
+
+        Returns (str) : URL to AlgoExplorer
+        """
         return self.explorer()+"tx/"+str(tx)
 
     # Returns true if the API is healthy    
