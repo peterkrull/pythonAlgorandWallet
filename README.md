@@ -49,11 +49,11 @@ params = node.suggested_params()
 tx = wallet.makeSendAlgoTx("primary_account","Algorand8",0.1337,params,"myPassword1234!")
 
 # Sends transaction and catches transaction ID
-txnote = node.send_transaction(tx) # Posts money transfer transaction to blockchain
+txID = node.send_transaction(tx) # Posts money transfer transaction to blockchain
 
 # Prints link to AlgoExplorer transaction page 
 # !!This will only work for the AlgoExplorerAPI node!!
-print( node.explorer_tx(txA) ) 
+print( node.explorer_tx(txID) ) 
 ```
 ## Participating in consensus
 
@@ -75,9 +75,9 @@ partkeyinfo = {'!! Your partkey dictionary should go here !!'}
 tx = wallet.participateConsensus("primary_account",params,partkeyinfo,"myPassword1234!")
 
 # Sends transaction and catches transaction ID
-txnote = node.send_transaction(tx) # Posts consensus participation transaction to blockchain
+txID = node.send_transaction(tx) # Posts consensus participation transaction to blockchain
 
 # Prints link to AlgoExplorer transaction page 
 # !!This will only work for the AlgoExplorerAPI node!!
-print( node.explorer_tx(tx) )
+print( node.explorer_tx(txID) )
 ```
