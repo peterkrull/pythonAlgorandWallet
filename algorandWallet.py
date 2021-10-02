@@ -460,7 +460,7 @@ class algoWallet:
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["private"], 'utf-8')).decode()
         except InvalidToken:
-            raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
+            raise IncorrectPassword(name)
         
     # decrypt and get the private mnemonic of an account
     def decryptMnemonic(self,name:str,password:str):
@@ -477,7 +477,7 @@ class algoWallet:
         try:
             return fern.decrypt(bytes(self.internalWallet[name]["account"]["mnemonic"], 'utf-8')).decode()
         except InvalidToken:
-            raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
+            raise IncorrectPassword(name)
     
     ## ============================= ##
     ## TRANSACTION / SIGNATURE STUFF ##
