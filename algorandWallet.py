@@ -477,17 +477,17 @@ class algoWallet:
 
     # TODO algosdk.encoding.transaction.xxxxxx is outdated and it should be using algosdk.future.transaction.xxxxxx instead
 
-    # transact algos offline (you must supply all parameters manually)
-    def makeSendAlgoTx(self,name:str,reciever,amount, params, password = None, microAlgos = False):
-
+    # generate a signed Algorand transaction object
+    def makeSendAlgoTx(self,name:str,reciever:str,amount:int, params:algosdk.future.transaction.SuggestedParams, note:str = None, password:str = None, microAlgos:bool = False):
         """
         Simple function for creating a signed Algo transaction
 
         Args:
             name (str) : Account used to send Algos from
-            reciever : Address or name in wallet file of recipient
-            amount : Number of algos to send to recipient
-            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            reciever (str) : Address or name in wallet file of recipient
+            amount (int) or (float) : Number of algos to send to recipient
+            params (algosdk...SuggestedParams) : Suggested Algorand transaction parameters
+            note (str) : Note field, used for short messages and voting on governance
             password (str) : If needed, password used to decrypt wallet.
             microAlgos (bool) : Switch to micro Algos instead of full algos (muiltiply by 1_000_000)
 
@@ -504,47 +504,29 @@ class algoWallet:
         public = self.getPublic(name,password)
         private = self.getPrivate(name,password)
 
-        # check if wallet wallet is encrypted and password is provided
-        try:
-            if ((self.getSalt(name) != "") and not password):
-                raise UserWarning("This wallet is encrypted, please provide a password.")
-        except KeyError as e:
-            raise KeyError("No account exists with that name : {}".format(e))
-
-        # decrypt public address if password is provided
-        if password:
-            try:
-                public = self.decryptPublic(name,password)
-                private = self.decryptPrivate(name,password)
-            except SyntaxWarning as e:
-                raise SyntaxWarning(("Invalid password provided, transaction canceled : {}").format(e))
-
         # check if reciever is address, or if they exist in address book
         if not algosdk.encoding.is_valid_address(rcv_address):
             try:
                 rcv_address = self.getPublic(reciever)
-                print("Found " + reciever + " in addressbook.")
+                print("Found {} in addressbook.".format(reciever))
             except KeyError as e:
-                print("No valid address or contact for : " + reciever)
-                return
+                raise NoValidContact(reciever)
 
         # format amount to Algos instead of mAlgos
         if not microAlgos:
-            amount = amount*1000000
+            amount = algosdk.util.algos_to_microalgos( amount )
 
+        if type(params) == dict:
+            params = algoWallet.params_dict_to_object(params)
 
-        raw_data = {
-            "amt": int(amount),         # unit is microAlgos
-            "fee": int(params["fee"]),                 # data["fee"] ~ 0.001 Algos
-            "first": int(params["lastRound"]),        # first valid block
-            "last": int(params["lastRound"]+1000),  # last valid block
-            "gen": params["genesisID"],          # network
-            "receiver": rcv_address,            # reciever address
-            "sender": public,     # sender address
-            "gh": params["genesishashb64"]          # genisis hash
-        }
+        tx = algosdk.future.transaction.PaymentTxn(
+            public,
+            params,
+            rcv_address,
+            int(amount),
+            note = note
+        )
 
-        tx = algosdk.encoding.transaction.PaymentTxn(**raw_data,)
         return tx.sign(private)
 
     # generate the string needed to generate participation keys
