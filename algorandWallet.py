@@ -782,7 +782,16 @@ class InvalidAddress(Exception):
         message = custom_message if custom_message else "The address '{}' is not a valid Algorand address.".format(address)
         super().__init__(message)
 
-
+class IncorrectPassword(Exception):
+    """
+    Exception for if decryption of account failed due to incorrect password
+    
+    Args:
+        account (str) : Account that failed to get decrypted
+    """
+    def __init__(self,account,custom_message=None):
+        message = custom_message if custom_message else "Incorrect password for the account '{}'.".format(account)
+        super().__init__(message)
 # Request password from user
 def password(name = None):
     """
