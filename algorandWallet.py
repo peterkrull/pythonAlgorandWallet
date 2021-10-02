@@ -25,7 +25,6 @@ class algoWallet:
             self.importWallet(filename)
         except FileNotFoundError:
             self.exportWallet(filename)
-        #self.generate = generate() not used for now
 
     ## ========================== ##
     ## BASIC WALLET FUNCTIONALITY ##
@@ -137,16 +136,11 @@ class algoWallet:
             }
         }
 
-        # update internal wallet file with information
-        try:
-            self.internalWallet[name]
+      # update internal wallet file with information
+        if name in self.internalWallet:
             print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
-            if (input().lower() != "yes"):
-                return
-        except:
-            pass
-
-        self.internalWallet.update(newWallet)
+            if (input().lower() == "yes"):
+                self.internalWallet.update(newWallet)
 
     # TODO (func) renames an existing account.
     def renameAccount(self,oldName:str,newName:str,password:str = False):
