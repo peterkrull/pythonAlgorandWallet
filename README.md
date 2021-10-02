@@ -1,4 +1,4 @@
-# Algorand Wallet written in Python (CLI only)
+# Algorand Wallet written in Python (no GUI)
 
 Algorand Wallet written in Python, to allow for signing of transactions and interacting with the Algorand blockchain. This wallet does not contain a graphical user interfaces, but the included functions make it easy to manage an account as well as send various transaction. The aim is to simplify the usage of the Algorand SDK for python, by combining the various methods into a package that allows for higher-level functionality.
 
