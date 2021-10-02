@@ -143,7 +143,7 @@ class algoWallet:
             if (input().lower() == "yes"):
                 self.internalWallet.update(newAccount)
 
-    # TODO (func) renames an existing account.
+    # renames an existing account.
     def renameAccount(self,oldName:str,newName:str):
         """
         Allows for renaming of accounts (and contacts) in wallet
@@ -159,7 +159,7 @@ class algoWallet:
 
         print("The account '{}' has been renamed to '{}'".format(oldName,newName))
     
-    # TODO (func) delete an existing account.
+    # delete an existing account.
     def removeAccount(self,name:str,verbose = True):
         """
         Allows for removal of accounts (and contacts) from wallet
