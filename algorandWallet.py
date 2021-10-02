@@ -761,6 +761,19 @@ class NoValidAccount(Exception):
         message = custom_message if custom_message else "No account named '{}' could be found in wallet.".format(account)
         super().__init__(message)
 
+class InvalidAddress(Exception):
+    """
+    Exception for if a supplied Algorand address is invalid
+    
+    Args:
+        address (str) : Address that is invalid
+        custom_message (str) : overwrites the defult exception message of this class
+    """
+    def __init__(self,address,custom_message=None):
+        message = custom_message if custom_message else "The address '{}' is not a valid Algorand address.".format(address)
+        super().__init__(message)
+
+
 # Request password from user
 def password(name = None):
     """
