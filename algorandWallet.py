@@ -751,11 +751,25 @@ class generate():
         return f"af/gov1:j[{vote_round},{xvotes}]"
 
 class NoValidContact(Exception):
+    """
+    Exception for when a contact does not exist in the address book.
+    
+    Args:
+        contact (str) : name of contact that could not looked up
+        custom_message (str) : overwrites the defult exception message of this class
+    """
     def __init__(self,contact,custom_message=None):
         message = custom_message if custom_message else "No contact named '{}' could be found in addressbook.".format(contact)
         super().__init__(message)
 
 class NoValidAccount(Exception):
+    """
+    Exception for when an account does not exist in the address book / wallet.
+    
+    Args:
+        account (str) : name of account that could not looked up
+        custom_message (str) : overwrites the defult exception message of this class
+    """
     def __init__(self,account,custom_message=None):
         message = custom_message if custom_message else "No account named '{}' could be found in wallet.".format(account)
         super().__init__(message)
