@@ -32,7 +32,7 @@ class algoWallet:
     ## ========================== ##
 
     # sets the disired name of the wallet file
-    def setWalletFileName(self,fileName):
+    def setWalletFileName(self,fileName:str):
         """
         Changes the default wallet file
 
@@ -42,7 +42,7 @@ class algoWallet:
         self.walletFileName = fileName
 
     # import wallet from wallet file
-    def importWallet(self,fileName = None):
+    def importWallet(self,fileName:str = None):
         """
         Imports wallet from file to internal wallet
 
@@ -56,7 +56,7 @@ class algoWallet:
         self.internalWallet = json.load(open(fileName,'r'))
 
     # export wallet to a file
-    def exportWallet(self,fileName = None):
+    def exportWallet(self,fileName:str = None):
         """
         Exports internal wallet to file with certain file name
 
@@ -149,14 +149,14 @@ class algoWallet:
         self.internalWallet.update(newWallet)
 
     # TODO (func) renames an existing account.
-    def renameAccount(self,oldName,newName,password = False):
+    def renameAccount(self,oldName:str,newName:str,password:str = False):
         """
         "Functionality not yet implemented"
         """
         print("Functionality not yet implemented")
     
     # TODO (func) delete an existing account.
-    def removeAccount(self,name):
+    def removeAccount(self,name:str):
         """
         "Functionality not yet implemented"
         """
@@ -189,7 +189,6 @@ class algoWallet:
 
             # also try contact
             return self.internalWallet[account]["contact"]["public"]
-
 
     # gets the private key for an account in wallet
     def getPrivate(self,account:str,pw:str = None):
