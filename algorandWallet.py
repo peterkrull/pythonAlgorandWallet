@@ -188,10 +188,8 @@ class algoWallet:
         except KeyError:
 
             # also try contact
-            try:
-                return self.internalWallet[account]["contact"]["public"]
-            except KeyError:
-                print("No account or contact named '" + account + "' exists.")
+            return self.internalWallet[account]["contact"]["public"]
+
 
     # gets the private key for an account in wallet
     def getPrivate(self,account:str,pw:str = None):
