@@ -568,25 +568,19 @@ class algoWallet:
 
         Returns: signed transaction with signature
         """
-        import base64
-
-        #if online and not partkeyinfo:
-        #    raise ValueError("Participation key info has to be provided to register as online.")
-
-         # try to convert to dictionary
-        try:
-            params = vars(params)
-        except:
-            pass
+        
+        if type(params) == dict:
+            params = algoWallet.params_dict_to_object(params)
 
         if partkeyinfo:
             data = {
                 "sender": self.getPublic(name,password),
-                "votekey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["vote"])),
-                "selkey": algosdk.encoding.encode_address(base64.b64decode(partkeyinfo["sel"])),
+                "votekey": partkeyinfo["vote"],
+                "selkey": partkeyinfo["sel"],
                 "votefst": partkeyinfo["first"],
                 "votelst": partkeyinfo["last"],
                 "votekd": partkeyinfo["voteKD"],
+                "sp":params
             }
         else:
             data = {
@@ -596,18 +590,11 @@ class algoWallet:
                 "votefst": None,
                 "votelst": None,
                 "votekd": None,
+                "sp":params
             }
 
-        data.update(
-                {"fee": 1000,
-                "flat_fee": True,
-                "first": params["lastRound"],
-                "last": params["lastRound"]+1000,
-                "gen": params["genesisID"],
-                "gh": params["genesishashb64"]}
-        )
-
-        tx = algosdk.encoding.transaction.KeyregTxn(**data,)
+        #tx = algosdk.encoding.transaction.KeyregTxn(**data,)
+        tx = algosdk.future.transaction.KeyregTxn(**data,)
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to commit Algos to governance
