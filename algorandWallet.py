@@ -1,3 +1,4 @@
+from Cryptodome.Hash.SHA512 import new
 import algosdk
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -125,7 +126,7 @@ class algoWallet:
             salt = ""
 
         # create wallet dict
-        newWallet = {
+        newAccount = {
             str(name) : { 
                 "account": {
                     "public" : public,
@@ -140,21 +141,36 @@ class algoWallet:
         if name in self.internalWallet:
             print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
             if (input().lower() == "yes"):
-                self.internalWallet.update(newWallet)
+                self.internalWallet.update(newAccount)
 
     # TODO (func) renames an existing account.
-    def renameAccount(self,oldName:str,newName:str,password:str = False):
+    def renameAccount(self,oldName:str,newName:str):
         """
-        "Functionality not yet implemented"
+        Allows for renaming of accounts (and contacts) in wallet
+
+        Args:
+            oldName (str) : Name of wallet to change name of
+            newName (str) : New name of wallet
         """
-        print("Functionality not yet implemented")
+
+        account = {newName:self.internalWallet[oldName]}
+        self.removeAccount(oldName,False)
+        self.internalWallet.update(account)
+
+        print("The account '{}' has been renamed to '{}'".format(oldName,newName))
     
     # TODO (func) delete an existing account.
-    def removeAccount(self,name:str):
+    def removeAccount(self,name:str,verbose = True):
         """
-        "Functionality not yet implemented"
+        Allows for removal of accounts (and contacts) from wallet
+
+        Args:
+            name (str) : Name of wallet to remove
         """
-        print("Functionality not yet implemented")
+
+        del self.internalWallet[name]
+        if verbose:
+            print("The account '{}' has been removed from wallet".format(name))
 
     ## ================ ##
     ## GET ACCOUNT INFO ##
@@ -255,7 +271,6 @@ class algoWallet:
 
         # Update contact
         self.internalWallet.update({contact:{"contact" : {"public":publicAddr}}})
-
 
     # removes contact from certain accounts addressbook
     def removeContact(self,contact:str):
