@@ -681,6 +681,16 @@ class generate():
             xvotes = cast_votes
         return f"af/gov1:j[{vote_round},{xvotes}]"
 
+class NoValidContact(Exception):
+    def __init__(self,contact,custom_message=None):
+        message = custom_message if custom_message else "No contact named '{}' could be found in addressbook.".format(contact)
+        super().__init__(message)
+
+class NoValidAccount(Exception):
+    def __init__(self,account,custom_message=None):
+        message = custom_message if custom_message else "No account named '{}' could be found in wallet.".format(account)
+        super().__init__(message)
+
 # Request password from user
 def password(name = None):
     """
