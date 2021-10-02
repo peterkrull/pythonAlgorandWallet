@@ -242,20 +242,20 @@ class algoWallet:
             contact (str) : Name of contact as it will appear in wallet file
             publicAddr (str) : Public address of contact
         """
-        if  algosdk.encoding.is_valid_address(publicAddr):
-            try:
-                self.internalWallet[contact]["contact"].update({contact:publicAddr})
-            except KeyError:
-                try:
-                    self.internalWallet[contact]["account"]
-                    print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
-                    if (input().lower() != "yes"):
-                        return
-                except:
-                    pass    
-                self.internalWallet.update({contact:{"contact" : {"public":publicAddr}}})
-        else:
-            raise Exception("Invalid Algorand account address.")
+
+        # Check for address validity
+        if not algosdk.encoding.is_valid_address(publicAddr):
+            raise InvalidAddress(publicAddr)
+
+        # Check if address fied is already occupied
+        if contact in self.internalWallet:
+            print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
+            if (input().lower() != "yes"):
+                return
+
+        # Update contact
+        self.internalWallet.update({contact:{"contact" : {"public":publicAddr}}})
+
 
     # removes contact from certain accounts addressbook
     def removeContact(self,contact:str):
