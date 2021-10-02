@@ -633,6 +633,97 @@ class algoWallet:
         tx = algosdk.encoding.transaction.KeyregTxn(**data,)
         return tx.sign(self.getPrivate(name,password))
 
+    # generate transaction data to commit Algos to governance
+    def governanceCommit(self,name:str, params, commit_amount:int, password:str = None, governance_acount:str = "governance",full_algo = False):
+        """
+        Generates signed transaction for participating in Algorand governance
+
+        Args:
+            name (str) : Name of account in wallet file to commit to governance
+            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            commit_amount (int) : number of micro Algos or Algos to commit to governance (see full_algo)
+            password (str) : If needed, password used to decrypt wallet.
+            governance_acount (str) : address or name in contact list of governancen account
+            full_algo (bool) : Wether to use full Algos or micro Algos -> True for full Algos
+
+        Returns: prints to command line
+        """  
+
+        if type(params) == dict:
+            params = algoWallet.params_dict_to_object(params)
+
+        if full_algo:
+            gov_note = generate.governanceCommitNote( algosdk.util.algos_to_microalgos( commit_amount) )
+        else:
+            gov_note = generate.governanceCommitNote( commit_amount )
+
+        if not algosdk.encoding.is_valid_address(governance_acount):
+            try:
+                governance_acount = self.getPublic(governance_acount)
+                print("Found governance account in addressbook.")
+            except KeyError as e:
+                print("No valid address or contact for : " + governance_acount)
+                return
+
+        tx = algosdk.future.transaction.PaymentTxn(
+            self.getPublic(name,password),
+            params,
+            governance_acount,
+            0,
+            note = gov_note
+        )
+
+        return tx.sign(self.getPrivate(name,password))
+
+    # generate transaction data to cast a vote in governance
+    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,password = None, governance_acount:str = "governance"):
+        """
+        Generates signed transaction for voting in Algorand governance
+
+        Args:
+            name (str) : Name of account in wallet file to generate participation key for
+            params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
+            vote_round (int) : Round of governance voting to cast a vote in
+            cast_votes list(str) : list containing strings of votes to cast
+            password (str) : If needed, password used to decrypt wallet.
+            governance_acount (str) : address or name in contact list of governancen account
+
+        Returns: prints to command line
+        """     
+
+        if type(params) == dict:
+            params = algoWallet.params_dict_to_object(params)
+
+        govNote = generate.governanceVoteNote(vote_round,cast_votes)
+
+        if not algosdk.encoding.is_valid_address(governance_acount):
+            try:
+                governance_acount = self.getPublic(governance_acount)
+                print("Found governance account in addressbook.")
+            except KeyError as e:
+                print("No valid address or contact for : " + governance_acount)
+                return
+
+        tx = algosdk.future.transaction.PaymentTxn(
+            self.getPublic(name,password),
+            params,
+            governance_acount,
+            0,
+            note = govNote
+        )
+
+        return tx.sign(self.getPrivate(name,password))
+
+    # converts a suggested parameters dictionary to a SuggestedParams-object 
+    def params_dict_to_object(params:dict):
+        return algosdk.future.transaction.SuggestedParams(
+            params["fee"],
+            params["lastRound"],
+            params["lastRound"] + 1000,
+            params["genesishashb64"],
+            params["genesisID"],
+            False)
+
 class generate():
 
     def governanceCommitNote(commit_amount:int) -> str:
