@@ -492,13 +492,7 @@ class algoWallet:
             microAlgos (bool) : Switch to micro Algos instead of full algos (muiltiply by 1_000_000)
 
         Returns: signed transaction
-        """
-        
-        # try to convert to dictionary
-        try:
-            params = vars(params)
-        except:
-            pass
+        """    
 
         rcv_address = reciever
         public = self.getPublic(name,password)
