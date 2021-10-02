@@ -593,7 +593,6 @@ class algoWallet:
                 "sp":params
             }
 
-        #tx = algosdk.encoding.transaction.KeyregTxn(**data,)
         tx = algosdk.future.transaction.KeyregTxn(**data,)
         return tx.sign(self.getPrivate(name,password))
 
