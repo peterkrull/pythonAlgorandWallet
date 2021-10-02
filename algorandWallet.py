@@ -277,6 +277,10 @@ class algoWallet:
         except KeyError:
             print("No contact named " + contact + " exists.")
 
+    # add governance account
+    def addGovernanceContact(self,publicAddr:str):
+        self.addContact("governance",publicAddr)
+
     ## ============================== ##
     ## WALLET ENCRYPTION / DECRYPTION ##
     ## ============================== ##
