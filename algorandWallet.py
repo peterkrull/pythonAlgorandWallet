@@ -423,23 +423,16 @@ class algoWallet:
 
         Returns: Decrypted public key
         """
-        fern = self.fernetGenerator(self.getSalt(name),password)
-        # first, try to look for matching account
-        try:
-            try:
+        
+        # look for matching account or contact
+        if name in self.internalWallet:
+            fern = self.fernetGenerator(self.getSalt(name),password)
+            if "account" in self.internalWallet[name]:
                 public = fern.decrypt(bytes(self.internalWallet[name]["account"]["public"], 'utf-8')).decode()
-            except InvalidToken:
-                raise SyntaxWarning("Invalid password for '{}', decryption failed.".format(name))
-        except KeyError:
-
-            # second, try to look for a contact
-            try:
-                try:
-                    public = fern.decrypt(bytes(self.internalWallet[name]["contact"]["public"], 'utf-8')).decode()
-                except InvalidToken:
-                    print("Invalid password for '{}', decryption failed.".format(name))
-            except KeyError:
-                raise KeyError("This account or contact does not exist.")
+            elif "contact" in self.internalWallet[name]:
+                public = fern.decrypt(bytes(self.internalWallet[name]["contact"]["public"], 'utf-8')).decode()
+        else:
+            raise NoValidAccount(name)
         
         # finally return
         return public
