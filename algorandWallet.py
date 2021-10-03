@@ -497,7 +497,7 @@ class algoWallet:
     ## ============================= ##
 
     # generate a signed Algorand transaction object
-    def makeSendAlgoTx(self,name:str,reciever:str,amount:int, params:algosdk.future.transaction.SuggestedParams, note:str = None, password:str = None, microAlgos:bool = False):
+    def makeSendAlgoTx(self,name:str,reciever:str,amount:int, params:dict, note:str = None, password:str = None, microAlgos:bool = False):
         """
         Simple function for creating a signed Algo transaction
 
@@ -517,7 +517,7 @@ class algoWallet:
         public = self.getPublic(name,password)
         private = self.getPrivate(name,password)
 
-        # check if reciever is address, or if they exist in address book
+        # check if reciever is address, and if they exist in address book
         if not algosdk.encoding.is_valid_address(rcv_address):
             try:
                 rcv_address = self.getPublic(reciever)
@@ -618,7 +618,7 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to commit Algos to governance
-    def governanceCommit(self,name:str, params, commit_amount:int, password:str = None, governance_acount:str = "governance",full_algo = False):
+    def governanceCommit(self,name:str, params, commit_amount:int, commit_period:period = period.NEXT, password:str = None, governance_account:str = None,full_algo = False):
         """
         Generates signed transaction for participating in Algorand governance
 
@@ -626,6 +626,7 @@ class algoWallet:
             name (str) : Name of account in wallet file to commit to governance
             params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
             commit_amount (int) : number of micro Algos or Algos to commit to governance (see full_algo)
+            commit_period (algoWallet.period) : period of address to commit Algos to
             password (str) : If needed, password used to decrypt wallet.
             governance_acount (str) : address or name in contact list of governancen account
             full_algo (bool) : Wether to use full Algos or micro Algos -> True for full Algos
@@ -633,26 +634,24 @@ class algoWallet:
         Returns: prints to command line
         """  
 
+        # get best available address with information given
+        gov_address = self.signupAddressPrioritizer(governance_account,commit_period)
+
+        # convert params to object
         if type(params) == dict:
             params = algoWallet.params_dict_to_object(params)
 
+        # convert microAlgo -> Algo
         if full_algo:
             gov_note = generate.governanceCommitNote( algosdk.util.algos_to_microalgos( commit_amount) )
         else:
             gov_note = generate.governanceCommitNote( commit_amount )
 
-        if not algosdk.encoding.is_valid_address(governance_acount):
-            try:
-                governance_acount = self.getPublic(governance_acount)
-                print("Found governance account in addressbook.")
-            except KeyError as e:
-                print("No valid address or contact for : " + governance_acount)
-                return
-
+        # create transaction dictionary
         tx = algosdk.future.transaction.PaymentTxn(
             self.getPublic(name,password),
             params,
-            governance_acount,
+            gov_address,
             0,
             note = gov_note
         )
@@ -660,7 +659,7 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to cast a vote in governance
-    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,password = None, governance_acount:str = "governance"):
+    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,vote_period:period = period.CURRENT,password = None, governance_account:str = None):
         """
         Generates signed transaction for voting in Algorand governance
 
@@ -669,6 +668,7 @@ class algoWallet:
             params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
             vote_round (int) : Round of governance voting to cast a vote in
             cast_votes list(str) : list containing strings of votes to cast
+            vote_period (algoWallet.period) : period of address to send vote to
             password (str) : If needed, password used to decrypt wallet.
             governance_acount (str) : address or name in contact list of governancen account
 
@@ -680,23 +680,46 @@ class algoWallet:
 
         govNote = generate.governanceVoteNote(vote_round,cast_votes)
 
-        if not algosdk.encoding.is_valid_address(governance_acount):
-            try:
-                governance_acount = self.getPublic(governance_acount)
-                print("Found governance account in addressbook.")
-            except KeyError as e:
-                print("No valid address or contact for : " + governance_acount)
-                return
+        gov_address = self.signupAddressPrioritizer(governance_account,vote_period)
 
         tx = algosdk.future.transaction.PaymentTxn(
             self.getPublic(name,password),
             params,
-            governance_acount,
+            gov_address,
             0,
             note = govNote
         )
 
         return tx.sign(self.getPrivate(name,password))
+
+    # prioritize between fetching address from contacts or API
+    def signupAddressPrioritizer(self,gov_account:str = None, gov_period:period = period.NEXT):
+        """
+        Returns the signup address for either the current or next period
+
+        Args:
+            gov_period (algoWallet.period) : Period to return sign-up address for
+
+        Returns: Algorand Address of chosen governance account
+        """
+        if algosdk.encoding.is_valid_address(gov_account):
+            return gov_account
+
+        # use contact if provided
+        elif self.contactExists(gov_account):
+            return self.getPublic(gov_account)
+
+        # use next period for sign-up (default)
+        elif gov_period == period.NEXT and govAPI.nextPeriodOpen():
+            return govAPI.getNextGovAddress()
+
+        # use current period for sign-up
+        elif gov_period == period.CURRENT:
+            return govAPI.getActiveGovAddress()
+        
+        # raise exception if no address was available
+        else:
+            raise(SignUpAddressUnavailable)
 
     # converts a suggested parameters dictionary to a SuggestedParams-object 
     def params_dict_to_object(params:dict):
@@ -759,6 +782,99 @@ class generate():
         """
         return f"af/gov1:j[{vote}]"
 
+## ============================ ##
+## GOVERNANCE API FUNCTIONALITY ##
+## ============================ ##
+
+# https://governance.algorand.foundation/api/documentation/
+class govAPI():
+    req = __import__('requests')
+    baseURL = "https://governance.algorand.foundation/api/"
+
+    # basic API get functionality
+    def get(suburl:str) -> dict:
+        """
+        Basic GET functionality for Algorand Governance API.
+        
+        Args:
+            suburl (str) : argument gets appended to https://governance.algorand.foundation/api/
+        
+        Response (dict) : The response is returned as a dictionary (JSON) format
+        """
+        temp_url = govAPI.baseURL + str(suburl)
+        return govAPI.getRaw(temp_url)
+
+    # basic API get functionality
+    def getRaw(url:str) -> dict:
+        """
+        Basic GET functionality for any API call that returns JSON.
+        
+        Args:
+            url (str) : Url to retrieve JSON data from
+        
+        Response (dict) : The response is returned as a dictionary (JSON) format
+        """
+        response = govAPI.req.get(url)
+
+        import json
+        res = response.content.decode()  
+        if response.ok:
+            return json.loads(res)
+
+    # returns the active governance address for current period
+    def getActiveGovAddress():
+        """
+        Gets the currently active Algorand Governance address (eg. for voting)
+        """
+        return govAPI.get("periods/active")["sign_up_address"]
+
+    # returns the governance address for the next period
+    def getNextGovAddress():
+        """
+        Gets the next Algorand Governance address (eg. for commiting Algos)
+        """
+        nextUrl = govAPI.get("periods")["next"]
+        if nextUrl:
+            return govAPI.getRaw(nextUrl)["sign_up_address"]
+        else:
+            raise NextPeriodNotAvailable()
+
+    # True/False for if next period is open yet
+    def nextPeriodOpen():
+        """
+        Checks wether the next period is open / public yet
+
+        Returns: True if open, False if not
+        """
+        if govAPI.get("periods")["next"]:
+            return True
+        else:
+            return False
+
+    # returns a single voting session in the active period
+    def getActiveVotingSessionsNum(num:int = None) -> dict:
+        slug = govAPI.get("periods/active")["voting_sessions"][num]["slug"]
+        return govAPI.get("voting-sessions/{}/".format(slug))
+
+    # returns list of all voting sessions in the active period
+    def getActiveVotingSessionsAll() -> list:
+        slug = govAPI.get("periods/active")["voting_sessions"]
+        gets = []
+        for i in slug:
+            gets.append(govAPI.get("voting-sessions/{}/".format(i["slug"])))
+
+        return gets
+
+    # cleans HTML by renoving tags
+    def cleanhtml(raw_html):
+        import re
+        CLEANR = re.compile('<.*?>') 
+        return re.sub(CLEANR, '', raw_html)
+
+## ================= ##
+## CUSTOM EXCEPTIONS ##
+## ================= ##
+
 class NoValidContact(Exception):
     """
     Exception for when a contact does not exist in the address book.
@@ -805,6 +921,23 @@ class IncorrectPassword(Exception):
     def __init__(self,account,custom_message=None):
         message = custom_message if custom_message else "Incorrect password for the account '{}'.".format(account)
         super().__init__(message)
+
+class NextPeriodNotAvailable(Exception):
+    """
+    Exception for if the next governance period is not yet open when trying to pull info from it.
+    """
+    def __init__(self,custom_message=None):
+        message = custom_message if custom_message else "Next Algorand governance period is not yet available."
+        super().__init__(message)
+
+class SignUpAddressUnavailable(Exception):
+    """
+    Exception for when no sign up address was available during commit or voting.
+    """
+    def __init__(self,custom_message=None):
+        message = custom_message if custom_message else "No valid sign-up address was available"
+        super().__init__(message)
+
 # Request password from user
 def password(name = None):
     """
