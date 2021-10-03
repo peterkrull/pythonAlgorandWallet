@@ -141,8 +141,9 @@ class algoWallet:
       # update internal wallet file with information
         if name in self.internalWallet:
             print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
-            if (input().lower() == "yes"):
-                self.internalWallet.update(newAccount)
+            if (input().lower() != "yes"):
+                return
+        self.internalWallet.update(newAccount)
 
     # renames an existing account.
     def renameAccount(self,oldName:str,newName:str):
