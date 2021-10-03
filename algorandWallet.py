@@ -101,8 +101,7 @@ class algoWallet:
             try:
                 private = algosdk.mnemonic.to_private_key(private)
             except ValueError:
-                raise ValueError("***Invalid private key/phrase. Please double check that it is correct.***")
-
+                raise InvalidPrivateKey
 
         self.makeAccount(name,private,password)
 
@@ -905,6 +904,18 @@ class InvalidAddress(Exception):
     def __init__(self,address,custom_message=None):
         message = custom_message if custom_message else "The address '{}' is not a valid Algorand address.".format(address)
         super().__init__(message)
+
+class InvalidPrivateKey(Exception):
+    """
+    Exception for if a supplied Algorand private key or mnemonic is invalid
+    
+    Args:
+        custom_message (str) : overwrites the defult exception message of this class
+    """
+    def __init__(self,custom_message=None):
+        message = custom_message if custom_message else "The supplied private key or mnemonic is not valid."
+        super().__init__(message)
+
 
 class IncorrectPassword(Exception):
     """
