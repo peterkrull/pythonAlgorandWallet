@@ -1,20 +1,11 @@
 from Cryptodome.Hash.SHA512 import new
 import algosdk
+from algosdk.encoding import is_valid_address
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-## ============ ##
-## CUSTOM ENUMS ##
-## ============ ##
-
-from enum import Enum, auto
-
-class period(Enum):
-    CURRENT = auto()
-    NEXT = auto()
 
 # Algorand Wallet class
 class algoWallet:
@@ -296,8 +287,11 @@ class algoWallet:
             print("No contact named " + contact + " exists.")
 
     # add or updates active governance account
-    def updateGovernanceContact(self:str):
-        self.addContact("governance",govAPI.getActiveGovAddress())
+    def setGovernanceContact(self,address:str):
+        if algosdk.encoding.is_valid_address(address):
+            self.addContact("governance",address)
+        else:
+            raise(InvalidAddress(address))
 
     def contactExists(self,contact):
         if contact in self.internalWallet:
@@ -542,6 +536,24 @@ class algoWallet:
 
         return tx.sign(private)
 
+    # returns signed tx object as JSON-formatted string with indents
+    def txDetails(self,tx:algosdk.transaction.SignedTransaction) -> dict:
+        """
+        Returns an easier to read version of a transaction object.
+        
+        Args:
+            tx (SignedTransaction) : Signed Algorand transaction object
+
+        Returns (str) : String formatted as JSON
+        """
+        tx = vars(tx)
+        txx = vars(tx["transaction"])
+        if type(txx["note"]) == bytes:
+            txx.update({"note":txx["note"].decode()})
+        tx.update({"transaction":txx})
+        import json
+        return json.dumps(tx,indent=4)
+
     # generate the string needed to generate participation keys
     def addPartKey(self,name:str,params,rounds:int,password:str = None):
         """
@@ -618,24 +630,28 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to commit Algos to governance
-    def governanceCommit(self,name:str, params, commit_amount:int, commit_period:period = period.NEXT, password:str = None, governance_account:str = None,microAlgos = False):
+    def governanceCommit(self,name:str, params, commit_amount:int, password:str = None, governance_account:str = "governance",microAlgos = False):
         """
         Generates signed transaction for participating in Algorand governance
 
         Args:
             name (str) : Name of account in wallet file to commit to governance
             params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
-            commit_amount (int) : number of micro Algos or Algos to commit to governance (see full_algo)
-            commit_period (algoWallet.period) : period of address to commit Algos to
+            commit_amount (int) : number of Algos or micro Algos to commit to governance (see microAlgos:bool)
             password (str) : If needed, password used to decrypt wallet.
             governance_acount (str) : address or name in contact list of governancen account
-            full_algo (bool) : Wether to use full Algos or micro Algos -> True for full Algos
+            microAlgos (bool) : Wether to use full Algos or micro Algos -> True for micro Algos
 
         Returns: prints to command line
         """  
 
         # get best available address with information given
-        gov_address = self.signupAddressPrioritizer(governance_account,commit_period)
+        if algosdk.encoding.is_valid_address(governance_account):
+            gov_address = governance_account
+        elif self.contactExists(governance_account):
+            gov_address = self.getPublic(governance_account)
+        else: 
+            raise(SignUpAddressUnavailable)
 
         # convert params to object
         if type(params) == dict:
@@ -659,7 +675,7 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to cast a vote in governance
-    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,vote_period:period = period.CURRENT,password:str = None, governance_account:str = None):
+    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,password:str = None, governance_account:str = "governance"):
         """
         Generates signed transaction for voting in Algorand governance
 
@@ -668,19 +684,26 @@ class algoWallet:
             params : Suggested Algorand transaction parameters ( see AlgodClient.suggested_params() )
             vote_round (int) : Round of governance voting to cast a vote in
             cast_votes list(str) : list containing strings of votes to cast
-            vote_period (algoWallet.period) : period of address to send vote to
             password (str) : If needed, password used to decrypt wallet.
             governance_acount (str) : address or name in contact list of governancen account
 
         Returns: prints to command line
         """     
 
+        # get best available address with information given
+        if algosdk.encoding.is_valid_address(governance_account):
+            gov_address = governance_account
+        elif self.contactExists(governance_account):
+            gov_address = self.getPublic(governance_account)
+        else: 
+            raise(SignUpAddressUnavailable)
+
+        # convert params to object
         if type(params) == dict:
             params = algoWallet.params_dict_to_object(params)
 
+        # generate governance note
         govNote = generate.governanceVoteNote(vote_round,cast_votes)
-
-        gov_address = self.signupAddressPrioritizer(governance_account,vote_period)
 
         tx = algosdk.future.transaction.PaymentTxn(
             self.getPublic(name,password),
@@ -691,35 +714,6 @@ class algoWallet:
         )
 
         return tx.sign(self.getPrivate(name,password))
-
-    # prioritize between fetching address from contacts or API
-    def signupAddressPrioritizer(self,gov_account:str = None, gov_period:period = period.NEXT):
-        """
-        Returns the signup address for either the current or next period
-
-        Args:
-            gov_period (algoWallet.period) : Period to return sign-up address for
-
-        Returns: Algorand Address of chosen governance account
-        """
-        if algosdk.encoding.is_valid_address(gov_account):
-            return gov_account
-
-        # use contact if provided
-        elif self.contactExists(gov_account):
-            return self.getPublic(gov_account)
-
-        # use next period for sign-up (default)
-        elif gov_period == period.NEXT and govAPI.nextPeriodOpen():
-            return govAPI.getNextGovAddress()
-
-        # use current period for sign-up
-        elif gov_period == period.CURRENT:
-            return govAPI.getActiveGovAddress()
-        
-        # raise exception if no address was available
-        else:
-            raise(SignUpAddressUnavailable)
 
     # converts a suggested parameters dictionary to a SuggestedParams-object 
     def params_dict_to_object(params:dict):
