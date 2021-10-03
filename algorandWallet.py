@@ -137,7 +137,7 @@ class algoWallet:
             }
         }
 
-      # update internal wallet file with information
+        # update internal wallet file with information
         if name in self.internalWallet:
             print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
             if (input().lower() != "yes"):
@@ -293,6 +293,7 @@ class algoWallet:
         else:
             raise(InvalidAddress(address))
 
+    # check if contact/account exists in wallet
     def contactExists(self,contact):
         if contact in self.internalWallet:
             if "contact" in self.internalWallet[contact]:
@@ -860,7 +861,15 @@ class govAPI():
         return gets
 
     # cleans HTML by renoving tags
-    def cleanhtml(raw_html):
+    def cleanhtml(raw_html:str):
+        """
+        Removes all HTML tags from a string
+
+        Args:
+            raw_html (str) : String to clean
+
+        Return (str) : Cleaned string
+        """
         import re
         CLEANR = re.compile('<.*?>') 
         return re.sub(CLEANR, '', raw_html)
@@ -916,7 +925,6 @@ class InvalidPrivateKey(Exception):
         message = custom_message if custom_message else "The supplied private key or mnemonic is not valid."
         super().__init__(message)
 
-
 class IncorrectPassword(Exception):
     """
     Exception for if decryption of account failed due to incorrect password
@@ -956,14 +964,7 @@ def password(name = None):
     """
     import getpass
     if name:
-        print("Please provide the password for decrypting '{}'.".format(name))
+        print("Please provide the encryption password for '{}'.".format(name))
     else:
-        print("Please provide the password for decrypting the account.")
+        print("Please provide the enctyption password for the account.")
     return getpass.getpass()
-
-## ==================================== ##
-## PUT CODE TO RUN AT SCRIPT START HERE ##
-## ==================================== ##
-
-if __name__ == '__main__':
-    print("Welcome to the Algorand Wallet written in Python.")
