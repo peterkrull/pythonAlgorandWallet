@@ -546,13 +546,13 @@ class algoWallet:
 
         Returns (str) : String formatted as JSON
         """
-        tx = vars(tx)
-        txx = vars(tx["transaction"])
+        txa = vars(tx).copy()
+        txx = vars(txa["transaction"])
         if type(txx["note"]) == bytes:
             txx.update({"note":txx["note"].decode()})
-        tx.update({"transaction":txx})
+        txa.update({"transaction":txx})
         import json
-        return json.dumps(tx,indent=4)
+        return json.dumps(txa,indent=4)
 
     # generate the string needed to generate participation keys
     def addPartKey(self,name:str,params,rounds:int,password:str = None):
