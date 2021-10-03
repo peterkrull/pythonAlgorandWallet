@@ -6,6 +6,16 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+## ============ ##
+## CUSTOM ENUMS ##
+## ============ ##
+
+from enum import Enum, auto
+
+class period(Enum):
+    CURRENT = auto()
+    NEXT = auto()
+
 # Algorand Wallet class
 class algoWallet:
 
