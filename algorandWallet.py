@@ -777,6 +777,109 @@ class generate():
         """
         return f"af/gov1:j[{vote}]"
 
+## ======================== ##
+## GOVERNANCE VOTING WIZARD ##
+## ======================== ##
+
+class voting():
+    """
+    CLASS : Automated wizard that aims to make it easier to read the proposals and cast votes.
+    To run the wizard, use the voting.wizard() method.
+    """
+
+    # voting wizard to guide through a vote
+    def wizard(sessions) -> tuple[int,tuple[str]]:
+        """
+        Automated wizard that aims to make it easier to read the proposals and cast votes.
+        
+        Args:
+            sessions (dict) : All current voting sessions and their contents, see govAPI.getActiveVotingSessionsAll()
+
+        Returns (int) , list(str) : ID for voting session and a list of the users votes for the proposals
+        """
+
+        session = voting.__selectSession(sessions)
+
+        id = session["id"]
+
+        votes = []
+        for topic in session["topics"]:
+            votes.append( voting.__selectOption(topic) )
+            
+
+        print("==============================================")
+        print("\n========= For the following session: =========\n")
+        print(">>> {} <<<".format(session["title"]))
+        print("\n========= You are casting votes for: =========\n")
+
+        index = []
+        for vote in votes:
+            print(">>> {} <<<".format(vote["title"]))
+            index.append(vote["indicator"])
+        
+        print("\n==============================================")
+        print("If this is your choise, please type 'yes' now.")
+        print("==============================================")
+        
+        if input().lower() == "yes":
+            return id, index
+
+    # From a list of active sessions, select one
+    def __selectSession(sessions):
+        title = []
+        for i in sessions:
+            title.append(i["title"])
+        print("\n==============================================")
+        print("You are about to select a voting session.")
+        print("Please enter the number in front of the title.")
+        print("==============================================")
+        for i in range(len(title)):
+            print("{} : {}".format(i,title[i]))
+
+        choise_raw = input()
+        try:
+            choise = int(choise_raw)
+        except ValueError:
+            raise InvalidUserChoise(choise_raw)
+        if choise < len(title) and choise >= 0:
+            print(">>> {} <<<".format(sessions[choise]["title"]))
+            print("==============================================\n")
+            return sessions[choise]
+        else:
+            raise InvalidUserChoise(choise)
+
+    # In a given session, take available votes
+    def __selectOption(options):
+
+        title = []
+        for i in options["topic_options"]:
+            title.append(i["title"])
+
+        print("Description of the current proposal:")
+        print("==============================================\n")
+        print(govAPI.cleanhtml( options["description_html"]))
+        print("\n==============================================")
+        print("You are about to select an option to vote for.")
+        print("Please enter the number in front of the title.")
+        print("NOTE: You can review your choises afterwards.")
+        print("==============================================")        
+
+        for i in range(len(title)):
+            print("{} : {}".format(i,title[i]))
+
+        choise_raw = input()
+        try:
+            choise = int(choise_raw)
+        except ValueError:
+            raise InvalidUserChoise(choise_raw)
+        if choise < len(title) and choise >= 0:
+            print(">>> {} <<<".format(options["topic_options"][choise]["title"]))
+            print("==============================================\n\n")
+            return options["topic_options"][choise]  
+        else:
+            raise InvalidUserChoise(choise)
+
+
 ## ============================ ##
 ## GOVERNANCE API FUNCTIONALITY ##
 ## ============================ ##
@@ -950,6 +1053,14 @@ class SignUpAddressUnavailable(Exception):
     """
     def __init__(self,custom_message=None):
         message = custom_message if custom_message else "No valid sign-up address was available"
+        super().__init__(message)
+
+class InvalidUserChoise(Exception):
+    """
+    Exception for when user makes a selection that is not valid.
+    """
+    def __init__(self,input,custom_message=None):
+        message = custom_message if custom_message else "The input '{}' was not a valid choise.".format(input)
         super().__init__(message)
 
 # Request password from user
