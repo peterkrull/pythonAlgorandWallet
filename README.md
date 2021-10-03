@@ -10,6 +10,10 @@ _More functionality will be added in the future._
 
 The two files `algorandWallet.py` and `AlgoExplorerAPI.py` provide the functionality you need manage a simple account, encrypt and decrypt priavte keys, add and remove contacts as well as make simple transaction on the blockchain without having to set up and maintain a personal Algorand node.
 
+# Examples
+
+Below you can find a few simple examples on how to do stuff like manage accounts, send Algos, participate in consensus and commit Algos to governance as well as vote.
+
 ## Creating a new wallet and adding contacts
 
 ```python
@@ -76,6 +80,63 @@ tx = wallet.participateConsensus("primary_account",params,partkeyinfo,"myPasswor
 
 # Sends transaction and catches transaction ID
 txID = node.send_transaction(tx) # Posts consensus participation transaction to blockchain
+
+# Prints link to AlgoExplorer transaction page 
+# !!This will only work for the AlgoExplorerAPI node!!
+print( node.explorer_tx(txID) )
+```
+
+## Commit Algos for Governance
+
+```python
+import AlgoExplorerAPI as ae
+import algorandWallet as aw
+
+# Creates wallet object
+wallet = aw.algoWallet("algorandWallet")
+
+# Creates a connection to the AlgoExplorer API
+node = ae.node("mainnet")
+params = node.suggested_params()
+
+# Fetch sign-up address for next period
+next_gov = aw.govAPI.getNextGovAddress()
+
+# Commit 100 algos to governance
+tx = wallet.governanceCommit("primary_account",params,100,"myPassword1234!",next_gov)
+
+# Sends transaction and catches transaction ID
+txID = node.send_transaction(tx)
+
+# Prints link to AlgoExplorer transaction page 
+# !!This will only work for the AlgoExplorerAPI node!!
+print( node.explorer_tx(txID) )
+```
+
+## Casting votes in Governance
+
+```python
+import AlgoExplorerAPI as ae
+import algorandWallet as aw
+
+# Creates wallet object
+wallet = aw.algoWallet("algorandWallet")
+
+# Creates a connection to the AlgoExplorer API
+node = ae.node("mainnet")
+params = node.suggested_params()
+
+# Fetch sign-up address for current (active) period
+acti_gov = aw.govAPI.getActiveGovAddress()
+
+# In voting round 3 cast votes as 'b' and 'x'
+tx = wallet.governanceVote("primary_account",params,3,["b","x"],"myPassword1234!",acti_gov)
+
+# View transaction details before voting
+print( wallet.txDetails(tx) )
+
+# Sends transaction and catches transaction ID
+txID = node.send_transaction(tx)
 
 # Prints link to AlgoExplorer transaction page 
 # !!This will only work for the AlgoExplorerAPI node!!
