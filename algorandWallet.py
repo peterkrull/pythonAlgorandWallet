@@ -618,7 +618,7 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to commit Algos to governance
-    def governanceCommit(self,name:str, params, commit_amount:int, commit_period:period = period.NEXT, password:str = None, governance_account:str = None,full_algo = False):
+    def governanceCommit(self,name:str, params, commit_amount:int, commit_period:period = period.NEXT, password:str = None, governance_account:str = None,microAlgos = False):
         """
         Generates signed transaction for participating in Algorand governance
 
@@ -641,12 +641,12 @@ class algoWallet:
         if type(params) == dict:
             params = algoWallet.params_dict_to_object(params)
 
-        # convert microAlgo -> Algo
-        if full_algo:
+        # convert microAlgo -> Algo (if needed)
+        if not microAlgos:
             gov_note = generate.governanceCommitNote( algosdk.util.algos_to_microalgos( commit_amount) )
         else:
             gov_note = generate.governanceCommitNote( commit_amount )
-
+            
         # create transaction dictionary
         tx = algosdk.future.transaction.PaymentTxn(
             self.getPublic(name,password),
@@ -659,7 +659,7 @@ class algoWallet:
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to cast a vote in governance
-    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,vote_period:period = period.CURRENT,password = None, governance_account:str = None):
+    def governanceVote(self,name:str,params,vote_round:int,cast_votes:str,vote_period:period = period.CURRENT,password:str = None, governance_account:str = None):
         """
         Generates signed transaction for voting in Algorand governance
 
