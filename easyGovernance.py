@@ -95,7 +95,7 @@ class voting():
         print("Setting up wallet and node, fetching params.")
         wallet = aw.algoWallet(wallet_name)
         sessions = aw.govAPI.getActiveVotingSessions()
-        xround, votes = aw.voting.wizard(sessions)
+        xround, votes = voting.wizard(sessions)
         node = ae.node()
         params = node.suggested_params()
 
