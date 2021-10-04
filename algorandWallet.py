@@ -1,6 +1,4 @@
-from Cryptodome.Hash.SHA512 import new
 import algosdk
-from algosdk.encoding import is_valid_address
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
@@ -773,7 +771,7 @@ class generate():
                 if i + 1 < len(cast_votes):
                     xvotes += ","
         else:
-            xvotes = cast_votes
+            xvotes = "\""+cast_votes+"\""
         return f"af/gov1:j[{vote_round},{xvotes}]"
 
     # generate string that casts votes in governance (secondary method)
@@ -812,14 +810,13 @@ class voting():
         """
 
         session = voting.__selectSession(sessions)
-
+        
         id = session["id"]
 
         votes = []
         for topic in session["topics"]:
             votes.append( voting.__selectOption(topic) )
             
-
         print("==============================================")
         print("\n========= For the following session: =========\n")
         print(">>> {} <<<".format(session["title"]))
@@ -891,7 +888,6 @@ class voting():
             return options["topic_options"][choise]  
         else:
             raise InvalidUserChoise(choise)
-
 
 ## ============================ ##
 ## GOVERNANCE API FUNCTIONALITY ##
