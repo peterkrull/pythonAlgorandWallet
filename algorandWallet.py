@@ -772,7 +772,6 @@ class generate():
                     xvotes += ","
         else:
             xvotes = "\""+cast_votes+"\""
-        #return "af/gov1:j[{},{}]".format(vote_round,xvotes)
         return generate.governanceVoteRaw("{},{}".format(vote_round,xvotes))
 
     # generate string that casts votes in governance (secondary method)
