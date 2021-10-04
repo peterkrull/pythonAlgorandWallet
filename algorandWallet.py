@@ -71,20 +71,21 @@ class algoWallet:
             json.dump(self.internalWallet,file,indent=4)
 
     # generates a new wallet
-    def genAccount(self,name:str,password:str = None): 
+    def genAccount(self,name:str,password:str = None, pub_crypt:bool = False): 
         """
         Generates random account and adds it to internal wallet
 
         Args:
             name (str) : Name for the account, as it will appear in wallet
             password (str) : Password to use for encryption, leave blank for no encryption
+            pub_crypt (bool) : True if public key should also be encrypted
         """
 
         private, public = algosdk.account.generate_account()
-        self.makeAccount(name,private,password)
+        self.makeAccount(name,private,password,pub_crypt)
 
     # accept either mnemonic or private key as input to recover account
-    def importAccount(self,name:str,private:str, password:str = None):
+    def importAccount(self,name:str,private:str, password:str = None, pub_crypt:bool = False):
         """
         Import an account from an existing private key or mnemonic
 
@@ -92,6 +93,7 @@ class algoWallet:
             name (str) : Name for the account, as it will appear in wallet
             private (str) : Private key OR mnemonic of account to add
             password (str) : Password to use for encryption, leave blank for no encryption
+            pub_crypt (bool) : True if public key should also be encrypted
         """
         # check if given key is valid private key or mnemonic
         try:
@@ -103,10 +105,10 @@ class algoWallet:
             except ValueError:
                 raise InvalidPrivateKey
 
-        self.makeAccount(name,private,password)
+        self.makeAccount(name,private,password,pub_crypt)
 
     # make an account from private key (not for users)
-    def makeAccount(self,name:str,private:str,password:str = None):
+    def makeAccount(self,name:str,private:str,password:str = None, pub_crypt:bool = False):
         """
         Generates account dictionary and appends it to the wallet file, encrypts if needed
 
@@ -114,6 +116,7 @@ class algoWallet:
             name (str) : Name for the account, as it will appear in wallet
             private (str) : Private key (not mnemonic) of account to add
             password (str) : Password to use for encryption, leave blank for no encryption
+            pub_crypt (bool) : True if public key should also be encrypted
         """
         # derive pubilc and mnemonic from private key
         public = algosdk.account.address_from_private_key(private)
@@ -121,7 +124,7 @@ class algoWallet:
 
         # if password is given, encrypt all all contents
         if password:
-            [public,private,mnemonic],salt = self.encryptContents([public,private,mnemonic],password)
+            [xpublic,private,mnemonic],salt = self.encryptContents([public,private,mnemonic],password)
         else:
             salt = ""
 
@@ -129,7 +132,7 @@ class algoWallet:
         newAccount = {
             str(name) : { 
                 "account": {
-                    "public" : public,
+                    "public" : xpublic if pub_crypt else public,
                     "private" : private,
                     "mnemonic" : mnemonic
                 },
@@ -188,8 +191,11 @@ class algoWallet:
 
         Returns: Public key (str)
         """
+
         try:
             if self.getSalt(account) == "":
+                return self.internalWallet[account]["account"]["public"]
+            elif algosdk.encoding.is_valid_address(self.internalWallet[account]["account"]["public"]):
                 return self.internalWallet[account]["account"]["public"]
             else:
                 if pw:
