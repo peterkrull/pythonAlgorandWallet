@@ -140,7 +140,7 @@ class algoWallet:
 
         # update internal wallet file with information
         if name in self.internalWallet:
-            print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
+            print("An account or contact with the name '{}' already exists. If you want to overwrite it, type 'yes', anything else will cancel.".format(name))
             if (input().lower() != "yes"):
                 return
         self.internalWallet.update(newAccount)
@@ -270,7 +270,7 @@ class algoWallet:
 
         # Check if address fied is already occupied
         if contact in self.internalWallet:
-            print("An account with this name already exists. If you want to overwrite it, type 'yes', anything else will cancel.")
+            print("An account or contact with the name '{}' already exists. If you want to overwrite it, type 'yes', anything else will cancel.".format(contact))
             if (input().lower() != "yes"):
                 return
 
