@@ -793,7 +793,7 @@ class voting():
         Automated wizard that aims to make it easier to read the proposals and cast votes.
         
         Args:
-            sessions (dict) : All current voting sessions and their contents, see govAPI.getActiveVotingSessionsAll()
+            sessions (dict) : All current voting sessions and their contents, see govAPI.getActiveVotingSessions()
 
         Returns (int) , list(str) : ID for voting session and a list of the users votes for the proposals
         """
@@ -949,13 +949,8 @@ class govAPI():
         else:
             return False
 
-    # returns a single voting session in the active period
-    def getActiveVotingSessionsNum(num:int = None) -> dict:
-        slug = govAPI.get("periods/active")["voting_sessions"][num]["slug"]
-        return govAPI.get("voting-sessions/{}/".format(slug))
-
     # returns list of all voting sessions in the active period
-    def getActiveVotingSessionsAll() -> list:
+    def getActiveVotingSessions() -> list:
         slug = govAPI.get("periods/active")["voting_sessions"]
         gets = []
         for i in slug:
