@@ -772,7 +772,8 @@ class generate():
                     xvotes += ","
         else:
             xvotes = "\""+cast_votes+"\""
-        return f"af/gov1:j[{vote_round},{xvotes}]"
+        #return "af/gov1:j[{},{}]".format(vote_round,xvotes)
+        return generate.governanceVoteRaw("{},{}".format(vote_round,xvotes))
 
     # generate string that casts votes in governance (secondary method)
     def governanceVoteRaw(vote:str) -> str:
@@ -786,7 +787,7 @@ class generate():
 
         Returns: Formatted string
         """
-        return f"af/gov1:j[{vote}]"
+        return "af/gov1:j[{}]".format(vote)
 
 ## ======================== ##
 ## GOVERNANCE VOTING WIZARD ##
@@ -860,7 +861,6 @@ class voting():
 
     # In a given session, take available votes
     def __selectOption(options):
-
         title = []
         for i in options["topic_options"]:
             title.append(i["title"])
