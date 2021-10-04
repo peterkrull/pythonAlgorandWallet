@@ -47,6 +47,24 @@ class node(algosdk.algod.AlgodClient):
         """
         return self.explorer()+"tx/"+str(tx)
 
+    # returns number of micro Algos of account
+    def account_amount(self,public_addr:str,pending_rewards:bool = True):
+        info = self.account_info(public_addr)
+
+        if pending_rewards:
+            return int(info["amount-without-pending-rewards"]) + int(info["pending-rewards"])
+        else:
+            return int(info["amount-without-pending-rewards"])
+
+    # returns the number of full algos of account
+    def account_algo_amount(self,public_addr:str,pending_rewards:bool = True):
+        info = self.account_info(public_addr)
+        if pending_rewards:
+            amount = int(info["amount-without-pending-rewards"]) + int(info["pending-rewards"])
+        else:
+            amount = int(info["amount-without-pending-rewards"])
+        return algosdk.util.microalgos_to_algos(amount)
+
     # Returns true if the API is healthy    
     def legacy_health(self):
         temp_url = self.base_url + str("/health")
