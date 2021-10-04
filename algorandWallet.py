@@ -540,7 +540,8 @@ class algoWallet:
             int(amount),
             note = note
         )
-
+        print("Please review your transaction before signing:")
+        print(tx.__dict__)
         return tx.sign(private)
 
     # returns signed tx object as JSON-formatted string with indents
@@ -634,6 +635,8 @@ class algoWallet:
             }
 
         tx = algosdk.future.transaction.KeyregTxn(**data,)
+        print("Please review your transaction before signing:")
+        print(tx.__dict__)
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to commit Algos to governance
@@ -679,6 +682,8 @@ class algoWallet:
             note = gov_note
         )
 
+        print("Please review your transaction before signing:")
+        print(tx.__dict__)
         return tx.sign(self.getPrivate(name,password))
 
     # generate transaction data to cast a vote in governance
@@ -720,6 +725,8 @@ class algoWallet:
             note = govNote
         )
 
+        print("Please review your transaction before signing:")
+        print(tx.__dict__)
         return tx.sign(self.getPrivate(name,password))
 
     # converts a suggested parameters dictionary to a SuggestedParams-object 
