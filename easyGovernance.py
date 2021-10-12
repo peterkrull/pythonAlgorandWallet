@@ -117,11 +117,8 @@ class voting():
 
     # voting wizard to guide through a vote
     def wizard(sessions) -> tuple[int,tuple[str]]:
-        
 
-        session = voting.__selectSession(sessions)
-        
-        id = session["id"]
+        session, index = voting.__selectSession(sessions)
 
         votes = []
         for topic in session["topics"]:
@@ -132,17 +129,17 @@ class voting():
         print(">>> {} <<<".format(session["title"]))
         print("\n========= You are casting votes for: =========\n")
 
-        index = []
+        indicator = []
         for vote in votes:
             print(">>> {} <<<".format(vote["title"]))
-            index.append(vote["indicator"])
+            indicator.append(vote["indicator"])
         
         print("\n==============================================")
         print("If this is your choice, please type 'yes' now.")
         print("==============================================")
         
         if input().lower() == "yes":
-            return id, index
+            return index, indicator
 
     # From a list of active sessions, select one
     def __selectSession(sessions):
@@ -163,7 +160,7 @@ class voting():
         if choice < len(title) and choice >= 0:
             print(">>> {} <<<".format(sessions[choice]["title"]))
             print("==============================================\n")
-            return sessions[choice]
+            return sessions[choice], choice+1
         else:
             raise ValueError
 
